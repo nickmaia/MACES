@@ -1,0 +1,131 @@
+Para garantir que as simulações sejam únicas para cada usuário e que cada usuário só possa ver o seu próprio histórico de simulações, você pode associar as simulações ao usuário que as criou. Isso envolve algumas etapas:
+
+### 1. **Adicionar uma Relação entre Simulação e Usuário:**
+Você precisará adicionar um campo de relacionamento ao seu modelo `Simulacao` para associá-lo ao usuário que o criou.
+
+### 2. **Modificar o Modelo `Simulacao`:**
+
+Adicione um campo `ForeignKey` no seu modelo `Simulacao` que aponte para o modelo `User`:
+
+```python
+from django.contrib.auth import get_user_model
+from django.db import models
+
+User = get_user_model()
+
+class Simulacao(models.Model):
+    nome = models.CharField(max_length=255)
+    usuario = models.ForeignKey(User, on_delete=models.CASCADE)  # Adiciona o campo de usuário
+    data_criacao = models.DateTimeField(auto_now_add=True)
+    # Outros campos...
+
+    def __str__(self):
+        return self.nome
+```
+
+### 3. **Atualizar as Views para Associar Simulação ao Usuário Autenticado:**
+
+Nas views que criam uma nova simulação (`SimulationWithMassView` e `SimulationWithoutMassView`), você precisará garantir que a simulação seja associada ao usuário autenticado:
+
+```python
+from django.contrib.auth.mixins import LoginRequiredMixin
+from django.views.generic import TemplateView
+from django.shortcuts import get_object_or_404, render, redirect
+from .models import Resultado, Simulacao
+from GA.GA_with_MLP import get_molecule_with_mass, get_molecule_without_mass
+
+class SimulationWithMassView(LoginRequiredMixin, TemplateView):
+    template_name = "simulation/simulacao_com_massa.html"
+
+    def post(self, request, *args, **kwargs):
+        nome_simulacao = request.POST.get("nome_simulacao")
+        massas = list(map(float, request.POST.getlist("mass")))
+        intensidades = list(map(float, request.POST.getlist("intensity")))
+        massa_alvo = request.POST.get("massa_alvo")
+        
+        # Criar uma nova simulação associada ao usuário autenticado
+        simulacao = Simulacao.objects.create(nome=nome_simulacao, usuario=request.user)
+        
+        if massa_alvo:
+            massa_alvo = float(massa_alvo)
+            resultado_calculado = get_molecule_with_mass(massas, intensidades, massa_alvo)
+            total_chances = sum(detalhes['chance'] for detalhes in resultado_calculado.values())
+
+            for molecula, detalhes in resultado_calculado.items():
+                chance_porcentagem = (detalhes['chance'] / total_chances) * 100
+                Resultado.objects.create(
+                    simulacao=simulacao,
+                    massa=detalhes['mass'],
+                    resultado=molecula,
+                    chance=chance_porcentagem,
+                )
+
+        return redirect("process_mass_values", id=simulacao.id)
+
+class SimulationWithoutMassView(LoginRequiredMixin, TemplateView):
+    template_name = "simulation/simulacao_sem_massa.html"
+
+    def post(self, request, *args, **kwargs):
+        nome_simulacao = request.POST.get("nome_simulacao")
+        massas = list(map(float, request.POST.getlist("mass")))
+        intensidades = list(map(float, request.POST.getlist("intensity")))
+
+        # Criar uma nova simulação associada ao usuário autenticado
+        simulacao = Simulacao.objects.create(nome=nome_simulacao, usuario=request.user)
+        
+        resultado_calculado = get_molecule_without_mass(massas, intensidades)
+        total_chances = sum(detalhes['chance'] for detalhes in resultado_calculado.values())
+
+        for molecula, detalhes in resultado_calculado.items():
+            chance_porcentagem = (detalhes['chance'] / total_chances) * 100
+            Resultado.objects.create(
+                simulacao=simulacao,
+                massa=detalhes['mass'],
+                resultado=molecula,
+                chance=chance_porcentagem,
+            )
+
+        return redirect("process_mass_values", id=simulacao.id)
+```
+
+### 4. **Modificar a View de Listagem de Simulações (`ResultadosView`) para Mostrar Apenas as Simulações do Usuário Autenticado:**
+
+```python
+class ResultadosView(LoginRequiredMixin, TemplateView):
+    template_name = "simulation/resultados_list.html"
+
+    def get(self, request, *args, **kwargs):
+        # Filtra as simulações pelo usuário autenticado
+        simulacoes = Simulacao.objects.filter(usuario=request.user).order_by("-data_criacao")
+        return render(request, self.template_name, {"simulacoes": simulacoes})
+```
+
+### 5. **Modificar a View de Processamento (`ProcessMassValuesView`) para Verificar a Propriedade da Simulação:**
+
+```python
+class ProcessMassValuesView(LoginRequiredMixin, TemplateView):
+    template_name = "simulation/resultados.html"
+
+    def get(self, request, id, *args, **kwargs):
+        simulacao = get_object_or_404(Simulacao, id=id, usuario=request.user)
+        resultados = Resultado.objects.filter(simulacao=simulacao)
+        return render(
+            request,
+            self.template_name,
+            {"simulacao": simulacao, "resultados": resultados},
+        )
+```
+
+### 6. **Considerações de Segurança:**
+- Ao usar `get_object_or_404` com `usuario=request.user`, você garante que o usuário só possa acessar as simulações que ele mesmo criou, evitando que um usuário visualize simulações de outro.
+
+### 7. **Migração do Banco de Dados:**
+Se você adicionar o campo `usuario` ao modelo `Simulacao`, não se esqueça de criar e aplicar uma migração para atualizar o esquema do banco de dados:
+
+```bash
+python manage.py makemigrations
+python manage.py migrate
+```
+
+### Conclusão:
+Com essas alterações, cada usuário autenticado terá seu próprio histórico de simulações, e só poderá acessar as simulações que ele próprio criou. Isso assegura que as simulações sejam mantidas privadas e segregadas por usuário.

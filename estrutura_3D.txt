@@ -1,0 +1,104 @@
+from rdkit import Chem
+from rdkit.Chem import AllChem
+
+# Criando a molécula de metano (CH4)
+mol = Chem.AddHs(Chem.MolFromSmiles('C'))  # Para etano, use 'CC', propano 'CCC', etc.
+
+# Gerando as coordenadas 3D da molécula
+AllChem.EmbedMolecule(mol)
+
+# Convertendo para o formato MOL
+mol_block = Chem.MolToMolBlock(mol)
+
+print(mol_block)
+
+
+from rdkit import Chem
+from rdkit.Chem import rdchem
+
+# Criando um objeto RWMol (molécula editável)
+mol = rdchem.RWMol()
+
+# Adicionando átomos de carbono e hidrogênio manualmente
+C = mol.AddAtom(Chem.Atom(6))  # Carbono
+H1 = mol.AddAtom(Chem.Atom(1)) # Hidrogênio 1
+H2 = mol.AddAtom(Chem.Atom(1)) # Hidrogênio 2
+H3 = mol.AddAtom(Chem.Atom(1)) # Hidrogênio 3
+H4 = mol.AddAtom(Chem.Atom(1)) # Hidrogênio 4
+
+# Adicionando ligações
+mol.AddBond(C, H1, Chem.BondType.SINGLE)
+mol.AddBond(C, H2, Chem.BondType.SINGLE)
+mol.AddBond(C, H3, Chem.BondType.SINGLE)
+mol.AddBond(C, H4, Chem.BondType.SINGLE)
+
+# Convertendo para uma molécula
+mol = mol.GetMol()
+
+# Gerando as coordenadas 3D da molécula
+Chem.AllChem.EmbedMolecule(mol)
+
+# Convertendo para o formato MOL
+mol_block = Chem.MolToMolBlock(mol)
+
+print(mol_block)
+
+
+from rdkit import Chem
+from rdkit.Chem import AllChem
+
+# Criando a molécula de água (H2O) com hidrogênios explícitos
+mol = Chem.AddHs(Chem.MolFromSmiles('O'))
+
+# Gerando as coordenadas 3D da molécula
+AllChem.EmbedMolecule(mol)
+
+# Convertendo para o formato MOL
+mol_block = Chem.MolToMolBlock(mol)
+
+print(mol_block)
+
+
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>3Dmol.js Molecule Viewer</title>
+    <script src="https://3Dmol.org/build/3Dmol-min.js"></script>
+</head>
+<body>
+    <div style="height: 400px; width: 400px; position: relative;" id="viewer"></div>
+
+    <script>
+        var viewer = $3Dmol.createViewer("viewer", {backgroundColor: "white"});
+        var molData = `
+     RDKit          3D
+
+  8  7  0  0  0  0  0  0  0  0999 V2000
+   -0.7599   -0.0045   -0.0513 C   0  0  0  0  0  0  0  0  0  0  0  0      
+    0.7379   -0.0347    0.0054 C   0  0  0  0  0  0  0  0  0  0  0  0      
+   -1.1289   -0.1839    0.9819 H   0  0  0  0  0  0  0  0  0  0  0  0      
+   -1.0729    1.0195   -0.3235 H   0  0  0  0  0  0  0  0  0  0  0  0      
+   -1.2009   -0.7879   -0.6786 H   0  0  0  0  0  0  0  0  0  0  0  0      
+    1.0532    0.8977    0.5403 H   0  0  0  0  0  0  0  0  0  0  0  0      
+    1.2205    0.0241   -0.9801 H   0  0  0  0  0  0  0  0  0  0  0  0      
+    1.1510   -0.9302    0.5060 H   0  0  0  0  0  0  0  0  0  0  0  0      
+  1  2  1  0
+  1  3  1  0
+  1  4  1  0
+  1  5  1  0
+  2  6  1  0
+  2  7  1  0
+  2  8  1  0
+M  END
+        `;
+
+        viewer.addModel(molData, "mol"); // Especificando o tipo como "mol"
+        viewer.setStyle({}, {stick: {}}); 
+        viewer.zoomTo();
+        viewer.render();
+    </script>
+</body>
+</html>
