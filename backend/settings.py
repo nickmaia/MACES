@@ -10,52 +10,23 @@ For the full list of settings and their values, see
 https://docs.djangoproject.com/en/4.2/ref/settings/
 """
 
-# Imports
-
 from pathlib import Path
-import environ
 import os
-
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
 
-# DataBase
-env = environ.Env()
-environ.Env.read_env()
 
 # Quick-start development settings - unsuitable for production
 # See https://docs.djangoproject.com/en/4.2/howto/deployment/checklist/
 
-# SECURITY SETTINGS
+# SECURITY WARNING: keep the secret key used in production secret!
+SECRET_KEY = "django-insecure-^flv9u_$lac!b+wbak3qjeka+0y%vui#xy+zoesqi&&0bs6$rc"
 
-# Use environment variable for secret key or generate a random one as a fallback
-SECRET_KEY = "vt$+ej5c24@&d9t!3ql#sjb#@(mz^ku(gs0udaq7wbi&e8&=7z"
-
-#DEBUG = "RENDER" not in os.environ
+# SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
-ALLOWED_HOSTS = ["*"]
 
-"""RENDER_EXTERNAL_HOSTNAME = os.environ.get("RENDER_EXTERNAL_HOSTNAME")
-if RENDER_EXTERNAL_HOSTNAME:
-    ALLOWED_HOSTS.append(RENDER_EXTERNAL_HOSTNAME)
-"""
-"""# SQLite - Database
-if DEBUG:
-    # Usando SQLite para desenvolvimento local
-    DATABASES = {
-        "default": {
-            "ENGINE": "django.db.backends.sqlite3",
-            "NAME": BASE_DIR / "db.sqlite3",
-        }
-    }
-
-    ALLOWED_HOSTS = ["127.0.0.1"]
-
-else:
-    # Configurações para o banco de dados PostgreSQL em produção
-    DATABASES = {"default": dj_database_url.parse(env("DATABASE_URL"))}
-"""
+ALLOWED_HOSTS = []
 
 
 # Application definition
@@ -85,8 +56,6 @@ MIDDLEWARE = [
     "django.middleware.clickjacking.XFrameOptionsMiddleware",
 ]
 
-
-
 ROOT_URLCONF = "backend.urls"
 
 TEMPLATES = [
@@ -107,7 +76,6 @@ TEMPLATES = [
 
 WSGI_APPLICATION = "backend.wsgi.application"
 
-#DEVELOPMENT_MODE = os.getenv("DEVELOPMENT_MODE", "False") == "True"
 
 # Database
 # https://docs.djangoproject.com/en/4.2/ref/settings/#databases
@@ -153,13 +121,12 @@ USE_TZ = True
 # https://docs.djangoproject.com/en/4.2/howto/static-files/
 
 STATIC_URL = "/static/"
-STATIC_ROOT = os.path.join(BASE_DIR, "staticfiles")
-STATICFILES_DIRS = (os.path.join(BASE_DIR, "static"),)
-STATICFILES_STORAGE = "whitenoise.storage.CompressedManifestStaticFilesStorage"
+STATICFILES_DIRS = [BASE_DIR / "static"]
 
-# Media
-MEDIA_URL = "/media/"
-MEDIA_ROOT = os.path.join(BASE_DIR, "media")
+if not DEBUG:
+    STATIC_ROOT = os.path.join(BASE_DIR, "staticfiles")
+    STATICFILES_STORAGE = "whitenoise.storage.CompressedManifestStaticFilesStorage"
+    
 
 # Default primary key field type
 # https://docs.djangoproject.com/en/4.2/ref/settings/#default-auto-field
@@ -174,5 +141,3 @@ AUTHENTICATION_BACKENDS = [
 ]
 
 LOGIN_URL = "login"  # A URL onde os usuários serão redirecionados para fazer login
-
-
