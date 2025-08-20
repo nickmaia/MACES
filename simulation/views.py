@@ -3,7 +3,7 @@ from django.views.generic import TemplateView
 from django.shortcuts import get_object_or_404, render, redirect
 from .models import Resultado, Simulacao
 from GA.GA_with_MLP import get_molecule_with_mass, get_molecule_without_mass
-
+import time
 
 class SimulationWithMassView(LoginRequiredMixin, TemplateView):
     template_name = "simulation/simulacao_com_massa.html"
@@ -28,27 +28,31 @@ class SimulationWithMassView(LoginRequiredMixin, TemplateView):
         # Criar uma nova simulação associada ao usuário autenticado
         simulacao = Simulacao.objects.create(nome=nome_simulacao, usuario=request.user)
 
-        # Verificar se massa_alvo está preenchida e converter para float
-        if massa_alvo:
-            massa_alvo = float(massa_alvo)
-            resultado_calculado = get_molecule_with_mass(
-                maiores_massas, maiores_intensidades, massa_alvo
-            )
+        
+        massa_alvo = float(massa_alvo)
+        # Calcular o tempo de execução da função de cálculo com massa
+        start_time = time.time()
+        # Calcular o tempo de execução da função de cálculo com massa 
+        resultado_calculado = get_molecule_with_mass(
+            maiores_massas, maiores_intensidades, massa_alvo
+        )
+        end_time = time.time()
+        execution_time = end_time - start_time
+        print(f"#########################Tempo de execução: {execution_time:.2f} segundos")
 
-            # Calcular a soma total das chances
-            total_chances = sum(
-                detalhes["chance"] for detalhes in resultado_calculado.values()
+        # Calcular a soma total das chances
+        total_chances = sum(
+            detalhes["chance"] for detalhes in resultado_calculado.values()
+        )
+        # Criar os resultados com base nos valores calculados
+        for molecula, detalhes in resultado_calculado.items():
+            chance_porcentagem = (detalhes["chance"] / total_chances) * 100
+            Resultado.objects.create(
+                simulacao=simulacao,
+                massa=detalhes["mass"],
+                resultado=molecula,
+                chance=chance_porcentagem,
             )
-
-            # Criar os resultados com base nos valores calculados
-            for molecula, detalhes in resultado_calculado.items():
-                chance_porcentagem = (detalhes["chance"] / total_chances) * 100
-                Resultado.objects.create(
-                    simulacao=simulacao,
-                    massa=detalhes["mass"],
-                    resultado=molecula,
-                    chance=chance_porcentagem,
-                )
 
         return redirect("process_mass_values", id=simulacao.id)
 

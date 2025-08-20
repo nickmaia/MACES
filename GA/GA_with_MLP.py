@@ -141,7 +141,7 @@ def load_model(input_dim=21, hidden_dim=526, output_dim=21, mode="with_mass"):
 
 
 def get_molecule_with_mass(
-    spectrum_weigth, spectrum_intensity, mass, verbose=False, run_number=4
+    spectrum_weigth, spectrum_intensity, mass, verbose=False, run_number=8
 ):
 
     # assert 0 <= mass <= 2681, "Element mass need to be between 0 and 2681"
@@ -186,8 +186,8 @@ def get_molecule_with_mass(
     element_index = [i for i in range(len(prediction)) if prediction[i] > 0]
 
     # GENETIC ALGORITHM
-    population_size = 500
-    ngen = 150
+    population_size = 1000
+    ngen = 125
     cxpb = 1
     mutpb = 0.25
     mlp_solution = [prediction[i] for i in element_index]
