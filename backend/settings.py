@@ -22,10 +22,19 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 # See https://docs.djangoproject.com/en/4.2/howto/deployment/checklist/
 
 # SECURITY WARNING: keep the secret key used in production secret!
-
-SECRET_KEY = os.environ.get("SECRET_KEY", "django-insecure-^flv9u_$lac!b+wbak3qjeka+0y%vui#xy+zoesqi&&0bs6$rc")
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = os.environ.get("DEBUG", "True") == "True"
+DEBUG = os.environ.get("DEBUG", "False") == "True"
+
+SECRET_KEY = os.environ.get("SECRET_KEY")
+if not SECRET_KEY:
+    if DEBUG:
+        from django.core.management.utils import get_random_secret_key
+        SECRET_KEY = get_random_secret_key()
+    else:
+        raise RuntimeError(
+            "SECRET_KEY não definida. Configure essa variável de ambiente "
+            "antes de rodar em produção."
+        )
 
 ALLOWED_HOSTS = ['127.0.0.1','localhost','maces.onrender.com']
 
